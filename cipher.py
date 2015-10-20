@@ -3,6 +3,7 @@
 from bitarray import bitarray #Import the BitArray Module (DO THIS ON ALL MACHINES)
 import pickle
 
+#Returns the inversed bits
 def inverse(bits):
 	bitlist = list(bits)
 	for i in range (0,16):
@@ -14,6 +15,21 @@ def inverse(bits):
 		bitlist[i] = bit
 	inversedbits = ''.join(bitlist)
 	return inversedbits
+
+#Slices the text into smaller portions (in order to be 16bits)
+def tolist(text):
+	i = 0
+	textlist = []
+	while (i < len(text)):
+		seq = ""
+		if (i+2) > len(text):
+			seq = (text[i]," ")
+		else:
+			seq = (text[i],text[i+1])
+		var =  ''.join(seq)
+		textlist.append(var)
+		i = i+2
+	return textlist
 
 
 def main():
@@ -27,17 +43,21 @@ def main():
 
 	#TODO: Remove as they are done
 	#Implement Serialisation
-	#Inverse method
 	#P-BOX
 	#S-BOX
 	#Bit-Shift
 
-	textBits = bitarray()
-	textBits.frombytes("ab")
-	print(textBits.to01())
-	inversedbits = inverse(textBits.to01())
-	print(inversedbits)
-	#print(textBits.to01())
+
+	textlist = tolist(text)
+
+	#Code for testing purposes
+	for block in textlist:
+		textBits = bitarray()
+		textBits.frombytes(block)
+		print("before: "+textBits.to01())
+		inversedbits = inverse(textBits.to01())
+		print("after : "+inversedbits)
+
 
 
 
