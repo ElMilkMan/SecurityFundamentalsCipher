@@ -4,9 +4,9 @@ from bitarray import bitarray #Import the BitArray Module (DO THIS ON ALL MACHIN
 import pickle
 
 #Returns the inversed bits
-def inverse(bits):
-	bitlist = list(bits)
-	for i in range (0,16):
+def inverse(block):
+	bitlist = list(block)
+	for i in range (0,len(block)):
 		bit = bitlist[i]
 		if bit == "0":
 			bit = "1"
@@ -31,6 +31,22 @@ def tolist(text):
 		i = i+2
 	return textlist
 
+def XOR(block,key):
+	blocklist = list(block)
+	keylist = list(key)
+	output = []
+	for i in range(0, len(block)):
+		if blocklist[i] == keylist[i]:
+			output.append("0")
+		else:
+			output.append("1")
+	xoredbits = ''.join(output)
+	return xoredbits
+
+def initialVector():
+	vector = []
+	for i in range(0,16)
+		
 
 def main():
 	print("Welcome to group 12's cipher")
@@ -55,7 +71,7 @@ def main():
 		textBits = bitarray()
 		textBits.frombytes(block)
 		print("before: "+textBits.to01())
-		inversedbits = inverse(textBits.to01())
+		inversedbits = XOR(textBits.to01(),"0100100101001000")
 		print("after : "+inversedbits)
 
 
