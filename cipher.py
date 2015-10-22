@@ -139,21 +139,26 @@ def bitShift(block, left, rotation):
 	output = ''.join(newblock)
 	return output
 
+#This is a 4-bit S-Box, it replaces 4-bit portions of the block with the correspoding one on the SBoxdict list
 def SBox(block):
 	sbox = getSBOXDict()
 	output = ""
 	i = 0
 	while (i<len(block)):
+		#Gets the 4-bit portion
 		bits =[]
 		for x in range(0,4):
-			n = i+x
-			bits.append(block[n])
+			bits.append(block[i+x])
+		#forms it into a string
 		strbits = "".join(bits)
+		#finds the corresponding portion
 		strbits = sbox[strbits]
+		#adds it to the new block
 		output = output+strbits
 		i = i+4
 	return output
 
+#Returns the S-Box list
 def getSBOXDict():
 	sbox = {
 		"0000" : "1011",
@@ -213,9 +218,6 @@ def main():
 	block = bitShift(block, True, 3)
 	print("3L Shisft: "+block)
 	block = SBox(block)
-	print("SBox     : "+block)
-
-
-
+	print("S-Box    : "+block)
 
 if __name__ == "__main__": main() #Defines the Main module as "Main" and not a library
