@@ -71,6 +71,37 @@ def initialVector():
 	key = ''.join(vector)
 	return key
 
+def PBox(block):
+	pbox = getPBOX()
+
+def getPBOX():
+	pbox = {
+		1 : 23,
+		2 : 5,
+		3 : 12,
+		4 : 8,
+		5 : 12,
+		6 : 1,
+		7 : 16,
+		8 : 4,
+		9 : 15,
+		10 : 13,
+		11 : 7,
+		12 : 9,
+		13 : 3,
+		14 : 9,
+		15 : 10,
+		16 : 6,
+		17 : 11,
+		18 : 5,
+		19 : 13,
+		20 : 16,
+		21 : 2,
+		22 : 14,
+		23 : 1,
+		24 : 7}
+	return pbox
+
 def main():
 	print("Welcome to group 12's cipher")
 	#print("Please enter the path to the file you wish to Encrpyt")
@@ -82,20 +113,29 @@ def main():
 
 	#TODO: Remove as they are done
 	#Implement Serialisation
-	#P-BOX
-	#S-BOX
+	#Expansion P-BOX (16-bit -> 24-bit)
+	#S-BOX (4-bit)
 	#Bit-Shift
 
 
 	textlist = tolist(text)
 	key = initialVector()
 	#Code for testing purposes
-	for block in textlist:
-		textBits = bitarray()
-		textBits.frombytes(block)
-		print("before: "+textBits.to01())
-		inversedbits = XOR(textBits.to01(),key)
-		print("after : "+inversedbits)
+	#for block in textlist:
+		#textBits = bitarray()
+		#textBits.frombytes(block)
+		#print("before: "+textBits.to01())
+		#inversedbits = XOR(textBits.to01(),key)
+		#print("after : "+inversedbits)
+	textBits = bitarray()
+	textBits.frombytes(textlist[0])
+	block = textBits.to01()
+	print("original: "+block)
+	block = inverse(block)
+	print("inverse : "+block)
+	block = XOR(block,key)
+	print("key     : "+key)
+	print("XOR     : "+block)
 
 
 
