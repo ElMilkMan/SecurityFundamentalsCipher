@@ -139,6 +139,41 @@ def bitShift(block, left, rotation):
 	output = ''.join(newblock)
 	return output
 
+def SBox(block):
+	sbox = getSBOXDict()
+	output = ""
+	i = 0
+	while (i<len(block)):
+		bits =[]
+		for x in range(0,4):
+			n = i+x
+			bits.append(block[n])
+		strbits = "".join(bits)
+		strbits = sbox[strbits]
+		output = output+strbits
+		i = i+4
+	return output
+
+def getSBOXDict():
+	sbox = {
+		"0000" : "1011",
+		"0001" : "0100",
+		"0010" : "1010",
+		"0011" : "0110",
+		"0100" : "0000",
+		"0101" : "1111",
+		"0110" : "0010",
+		"0111" : "1101",
+		"1000" : '0011',
+		"1001" : "1110",
+		"1010" : "0001",
+		"1011" : "1000",
+		"1100" : "0111",
+		"1101" : "1001",
+		"1110" : "0101",
+		"1111" : "1100"}
+	return sbox
+
 def main():
 	print("Welcome to group 12's cipher")
 	#print("Please enter the path to the file you wish to Encrpyt")
@@ -177,6 +212,8 @@ def main():
 	print("Ext PBOX : "+block)
 	block = bitShift(block, True, 3)
 	print("3L Shisft: "+block)
+	block = SBox(block)
+	print("SBox     : "+block)
 
 
 
