@@ -6,17 +6,17 @@ import random
 
 #Returns the inversed bits
 def inverse(block):
-	#creates a list of the bits of the block
-	bitlist = list(block)
+	#the list of the new bits
+	bitlist = []
 	#goes through every bit and inverses it
 	for i in range (0,len(block)):
-		bit = bitlist[i]
+		bit = block[i]
 		if bit == "0":
 			bit = "1"
 		else:
 			bit = "0"
 		#the inversed bit gets assigned into the list
-		bitlist[i] = bit
+		bitlist.append(bit)
 	#The list gets assembled into a block again
 	inversedbits = ''.join(bitlist)
 	return inversedbits
@@ -40,15 +40,13 @@ def tolist(text):
 
 #XORes the block with the key
 def XOR(block,key):
-	#creates a list of block
-	blocklist = list(block)
 	#create a list of the key
 	keylist = list(key)
 	#this list will hold the output of the xor
 	output = []
 	#this is were the XOR happens
 	for i in range(0, len(block)):
-		if blocklist[i] == keylist[i]:
+		if block[i] == keylist[i]:
 			output.append("0")
 		else:
 			output.append("1")
@@ -71,18 +69,30 @@ def initialVector():
 	key = ''.join(vector)
 	return key
 
+#This is an extension PBOX which changes the order of the bits and adds more bits
+#to make the cipher more complex
 def PBox(block):
-	pbox = getPBOX()
+	#gets the PBOX dictionary
+	pbox = getPBOXDict()
+	#List were the new bits will be stored
+	newblock = []
+	#the process of changes the order of the block
+	for i in range(1,25):
+		newblock.append(block[pbox[i]])
+	#Changes the object from a list into one string
+	output = ''.join(newblock)
+	return output
 
-def getPBOX():
+#Generates a dictionary which holds the sequence of the PBOX
+def getPBOXDict():
 	pbox = {
-		1 : 23,
+		1 : 3,
 		2 : 5,
 		3 : 12,
 		4 : 8,
 		5 : 12,
 		6 : 1,
-		7 : 16,
+		7 : 6,
 		8 : 4,
 		9 : 15,
 		10 : 13,
@@ -95,12 +105,39 @@ def getPBOX():
 		17 : 11,
 		18 : 5,
 		19 : 13,
-		20 : 16,
+		20 : 0,
 		21 : 2,
 		22 : 14,
 		23 : 1,
 		24 : 7}
 	return pbox
+
+#Shifts the bits of the block left or right and a specific number of steps
+#The "left" parameter is a boolean and states if the rotation is happening to the left or the right
+#The "rotation" parameter is an int and is the number of steps the bits will be shifted
+def bitShift(block, left, rotation):
+	#the list of the new bits
+	newblock = []
+	# If the rotation is towards the left
+	if left:
+		for i in range(0, len(block)):
+			#n is the bit that goes to position i
+			n = i-rotation
+			#if n is below 0, the bit will be taken from the end of the list
+			if n < 0:
+				n = n+len(block)
+			newblock.append(block[n])
+	#If the rotation is towards the right
+	else:
+		for i in range(0, len(block)):
+			#n is the new position of bit i
+			n = i+rotation
+			#if n is greater than it goes at the beginning of the list
+			if n > 0:
+				n = n-len(block)
+			newblock.insert(n,block[i])
+	output = ''.join(newblock)
+	return output
 
 def main():
 	print("Welcome to group 12's cipher")
@@ -115,7 +152,7 @@ def main():
 	#Implement Serialisation
 	#Expansion P-BOX (16-bit -> 24-bit)
 	#S-BOX (4-bit)
-	#Bit-Shift
+	#Bit-Shift (Swift)
 
 
 	textlist = tolist(text)
@@ -130,13 +167,16 @@ def main():
 	textBits = bitarray()
 	textBits.frombytes(textlist[0])
 	block = textBits.to01()
-	print("original: "+block)
+	print("Original : "+block)
 	block = inverse(block)
-	print("inverse : "+block)
+	print("Inverse  : "+block)
 	block = XOR(block,key)
-	print("key     : "+key)
-	print("XOR     : "+block)
-
+	print("Key      : "+key)
+	print("XOR      : "+block)
+	block = PBox(block)
+	print("Ext PBOX : "+block)
+	block = bitShift(block, True, 3)
+	print("3L Shisft: "+block)
 
 
 
