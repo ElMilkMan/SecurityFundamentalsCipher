@@ -250,13 +250,15 @@ def writeCipherFile(cipher, filename):
 	filenames = filename.split(".",1)
 	cipherfile = open(filenames[0]+"_encrypted."+filenames[1],"wb")
 	cipherfile.write(cipher)
+	print "Your file was encrypted into "+filenames[0]+"_encrypted."+filenames[1]
 
 #Encrypts the plain text into cipher
 #The encryption algorithm is:
 #Inversion>circle shift (5 to the left)>S-Box>XOR>Ext PBOX>Inversion>S-Box>circle shift (2 to the right)
-def encrypt(text, filename, key):
-	textlist = tolist(text)
-	# key = initialVector()
+def encrypt(filename):
+	plainText=open(filename,'rb') #Takes the path given via user input and assigns the file to object "PlainText", in read mode.
+	textlist = tolist(plainText.read())
+	key = initialVector()
 	cipherlist = []
 	for i in range(0, len(textlist)):
 		textBits = bitarray()
@@ -264,7 +266,6 @@ def encrypt(text, filename, key):
 		textBits = bitarray(inverse(textBits.tolist()))
 		textBits = bitarray(bitShift(textBits, True, 5))
 		textBits = bitarray(SBoxEncrypt(bitarray(textBits).to01()))
-		# print textBits.to01()
 		if i == 0:
 			textBits = bitarray(XOR(textBits.tolist(),key))
 		else:
@@ -284,12 +285,15 @@ def encrypt(text, filename, key):
 
 #Decryption function
 #Circle shift (2 to the left)>S-Box>Inversion>Ext P-Box>XOR>S-Box>circle shift (5 to the right)>Inversion
-def decrypt(key):
-	cipherText = open("plain_encrypted.txt","rb")
+def decrypt(filename, key):
+	cipherText = open(filename,"rb")
 	text = cipherText.read()
 	charlist = struct.unpack("s" * ((len(text))), text)
 	i = len(charlist)-1
 	textlist = []
+	keyba = bitarray()
+	keyba.fromstring(key)
+	key = keyba.tolist()
 	while (i > 1):
 		cipherBits = bitarray()
 		cipherBits.frombytes(charlist[i-2]+charlist[i-1]+charlist[i])
@@ -314,29 +318,41 @@ def decrypt(key):
 	while(x > 0):
 		text = text + textlist[x]
 		x = x - 1
-	print text
+	writeTextFile(text, filename)
+
+
+def getBitList(key):
+	ba = bitarray()
+	ba = ba.fromstring()
 
 def writeTextFile(cipher, filename):
 	filenames = filename.split(".",1)
 	cipherfile = open(filenames[0]+"_decrypted."+filenames[1],"wb")
 	cipherfile.write(cipher)
+	print "Your file was decrypted into "+filenames[0]+"_decrypted."+filenames[1]
 
 def main():
-	print("Welcome to group 12's cipher")
-	#print("Please enter the path to the file you wish to Encrpyt")
-	#fileName = raw_input()
+	print "Welcome to group 12's cipher"
+	notquit = True
+	while notquit:
+		print
+		print "Please choose one of the functions below. Type:"
+		print "1 to encrypt a file \n2 to decrypt a file \n0 to quit"
+		function = raw_input()
 
-	plainText=open("plain.txt",'rb') #Takes the path given via user input and assigns the file to object "PlainText", in read mode.
-        text = plainText.read()
-
-	#TODO: Remove as they are done
-	#Implement Serialisation
-	#Expansion P-BOX (16-bit -> 24-bit)
-	#S-BOX (4-bit)
-	#Bit-Shift (Swift)
-	key = initialVector()
-	# XOR("10110010","100011011")
-	encrypt(text, "plain.txt", key)
-	decrypt(key)
+		if function == "1":
+			print "Please type the filename you wish to encrypt: "
+			filename = raw_input()
+			encrypt(filename)
+		elif function == "2":
+			print "Please type the filename you wish to decrypt: "
+			filename = raw_input()
+			print "Please type the key to decrypt "+filename+": "
+			key = raw_input()
+			decrypt(filename, key)
+		elif function =="0":
+			notquit = False
+		else:
+			print "Please re type the function"
 
 if __name__ == "__main__": main() #Defines the Main module as "Main" and not a library
