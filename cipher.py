@@ -3,6 +3,8 @@
 from bitarray import bitarray #Import the BitArray Module (DO THIS ON ALL MACHINES)
 import pickle
 import random
+import string
+import struct
 
 #Returns the inversed bits
 def inverse(block):
@@ -11,15 +13,13 @@ def inverse(block):
 	#goes through every bit and inverses it
 	for i in range (0,len(block)):
 		bit = block[i]
-		if bit == "0":
-			bit = "1"
+		if bit:
+			bit = False
 		else:
-			bit = "0"
+			bit = True
 		#the inversed bit gets assigned into the list
 		bitlist.append(bit)
-	#The list gets assembled into a block again
-	inversedbits = ''.join(bitlist)
-	return inversedbits
+	return bitlist
 
 #Slices the text into smaller portions (in order to be 16bits) and returns a list
 def tolist(text):
@@ -40,34 +40,24 @@ def tolist(text):
 
 #XORes the block with the key
 def XOR(block,key):
-	#create a list of the key
-	keylist = list(key)
 	#this list will hold the output of the xor
 	output = []
 	#this is were the XOR happens
 	for i in range(0, len(block)):
-		if block[i] == keylist[i]:
-			output.append("0")
+		if block[i] == key[i]:
+			output.append(False)
 		else:
-			output.append("1")
-	#This output of the xor gets assembled into one 16-bit block
-	xoredbits = ''.join(output)
-	return xoredbits
+			output.append(True)
+	return output
 
 #It creates an initial vector for the purposes of CBC
 def initialVector():
-	#The array that will store the bits for now
-	vector = []
-	#randomly generate bits 16 times in order to create the 16-bit vector
-	for i in range(0,16):
-		var  = bool(random.getrandbits(1))
-		if var:
-			vector.append("1")
-		else:
-			vector.append("0")
-	#final assembly of the vector
-	key = ''.join(vector)
-	return key
+	key = ""
+	for i in range(0,2):
+		key = key+random.choice(string.ascii_letters)
+	ba = bitarray()
+	ba.fromstring(key)
+	return ba.tolist()
 
 #This is an extension PBOX which changes the order of the bits and adds more bits
 #to make the cipher more complex
@@ -75,12 +65,11 @@ def PBox(block):
 	#gets the PBOX dictionary
 	pbox = getPBOXDict()
 	#List were the new bits will be stored
-	newblock = []
+	output = []
 	#the process of changes the order of the block
 	for i in range(1,25):
-		newblock.append(block[pbox[i]])
+		output.append(block[pbox[i]])
 	#Changes the object from a list into one string
-	output = ''.join(newblock)
 	return output
 
 #Generates a dictionary which holds the sequence of the PBOX
@@ -117,7 +106,7 @@ def getPBOXDict():
 #The "rotation" parameter is an int and is the number of steps the bits will be shifted
 def bitShift(block, left, rotation):
 	#the list of the new bits
-	newblock = []
+	output = []
 	# If the rotation is towards the left
 	if left:
 		for i in range(0, len(block)):
@@ -126,7 +115,7 @@ def bitShift(block, left, rotation):
 			#if n is below 0, the bit will be taken from the end of the list
 			if n < 0:
 				n = n+len(block)
-			newblock.append(block[n])
+			output.append(block[n])
 	#If the rotation is towards the right
 	else:
 		for i in range(0, len(block)):
@@ -135,14 +124,13 @@ def bitShift(block, left, rotation):
 			#if n is greater than it goes at the beginning of the list
 			if n > 0:
 				n = n-len(block)
-			newblock.insert(n,block[i])
-	output = ''.join(newblock)
+			output.insert(n,block[i])
 	return output
 
 #This is a 4-bit S-Box, it replaces 4-bit portions of the block with the correspoding one on the SBoxdict list
 def SBox(block):
 	sbox = getSBOXDict()
-	output = ""
+	output = []
 	i = 0
 	while (i<len(block)):
 		#Gets the 4-bit portion
@@ -153,8 +141,11 @@ def SBox(block):
 		strbits = "".join(bits)
 		#finds the corresponding portion
 		strbits = sbox[strbits]
-		#adds it to the new block
-		output = output+strbits
+		for x in range(0, len(strbits)):
+			if strbits[x] == "1":
+				output.append(True)
+			else:
+				output.append(False)
 		i = i+4
 	return output
 
@@ -179,6 +170,54 @@ def getSBOXDict():
 		"1111" : "1100"}
 	return sbox
 
+def writeCipherFile(cipher, filename):
+	filenames = filename.split(".",1)
+	cipherfile = open(filenames[0]+"_encrypted."+filenames[1],"w")
+	cipherfile.write(cipher)
+
+#Encrypts the plain text into cipher
+#The encryption algorithm is:
+#Inversion>circle shift (5 to the left)>S-Box>XOR>Ext PBOX>Inversion>S-Box>circle shift (2 to the right)
+def encrypt(text, filename):
+	textlist = tolist(text)
+	key = initialVector()
+	cipherlist = []
+	for i in range(0, len(textlist)):
+		textBits = bitarray()
+		textBits.fromstring(textlist[i])
+		textBits = bitarray(inverse(textBits.tolist()))
+		textBits = bitarray(bitShift(textBits, True, 5))
+		textBits = bitarray(SBox(bitarray(textBits).to01()))
+		if i == 0:
+			textBits = bitarray(XOR(textBits,key))
+		else:
+			textBits = bitarray(XOR(textBits,cipherlist[-1]))
+		textBits = bitarray(PBox(textBits))
+		textBits = bitarray(inverse(textBits.tolist()))
+		textBits = bitarray(SBox(bitarray(textBits).to01()))
+		textBits = bitarray(bitShift(textBits, False, 2))
+		cipherlist.append(textBits.tolist())
+	completeCipher = []
+	for row in cipherlist:
+		for item in cipherlist[1]:
+			completeCipher.append(item)
+	ba = bitarray(completeCipher)
+	# print struct.pack('?', ba.tobytes())
+	#print ba.to01()
+	writeCipherFile(ba.tobytes(), filename)
+	print("Key to decrypt: "+bitarray(key).tostring())
+
+#
+# def decrypt():
+# 	cipherText = open("plain_encrypted.txt",mode="rb")
+# 	text = cipherText.read()
+#
+# 	print struct.unpack(""*(len(text)), text)
+# 	#print struct.unpack("i" * ((len(text) -24) // 4), text[20:-4])
+# 	#ba = bitarray().frombytes(text)
+# 	#print ba
+
+
 def main():
 	print("Welcome to group 12's cipher")
 	#print("Please enter the path to the file you wish to Encrpyt")
@@ -194,30 +233,7 @@ def main():
 	#S-BOX (4-bit)
 	#Bit-Shift (Swift)
 
-
-	textlist = tolist(text)
-	key = initialVector()
-	#Code for testing purposes
-	#for block in textlist:
-		#textBits = bitarray()
-		#textBits.frombytes(block)
-		#print("before: "+textBits.to01())
-		#inversedbits = XOR(textBits.to01(),key)
-		#print("after : "+inversedbits)
-	textBits = bitarray()
-	textBits.frombytes(textlist[0])
-	block = textBits.to01()
-	print("Original : "+block)
-	block = inverse(block)
-	print("Inverse  : "+block)
-	block = XOR(block,key)
-	print("Key      : "+key)
-	print("XOR      : "+block)
-	block = PBox(block)
-	print("Ext PBOX : "+block)
-	block = bitShift(block, True, 3)
-	print("3L Shisft: "+block)
-	block = SBox(block)
-	print("S-Box    : "+block)
+	encrypt(text, "plain.txt")
+	# decrypt()
 
 if __name__ == "__main__": main() #Defines the Main module as "Main" and not a library
