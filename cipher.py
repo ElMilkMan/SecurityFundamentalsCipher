@@ -172,7 +172,7 @@ def getSBOXDict():
 
 def writeCipherFile(cipher, filename):
 	filenames = filename.split(".",1)
-	cipherfile = open(filenames[0]+"_encrypted."+filenames[1],"w")
+	cipherfile = open(filenames[0]+"_encrypted."+filenames[1],"wb")
 	cipherfile.write(cipher)
 
 #Encrypts the plain text into cipher
@@ -199,23 +199,26 @@ def encrypt(text, filename):
 		cipherlist.append(textBits.tolist())
 	completeCipher = []
 	for row in cipherlist:
-		for item in cipherlist[1]:
+		for item in row:
 			completeCipher.append(item)
 	ba = bitarray(completeCipher)
-	# print struct.pack('?', ba.tobytes())
-	#print ba.to01()
 	writeCipherFile(ba.tobytes(), filename)
 	print("Key to decrypt: "+bitarray(key).tostring())
 
-#
-# def decrypt():
-# 	cipherText = open("plain_encrypted.txt",mode="rb")
-# 	text = cipherText.read()
-#
-# 	print struct.unpack(""*(len(text)), text)
-# 	#print struct.unpack("i" * ((len(text) -24) // 4), text[20:-4])
-# 	#ba = bitarray().frombytes(text)
-# 	#print ba
+
+def decrypt():
+	cipherText = open("plain_encrypted.txt","rb")
+	text = cipherText.read()
+	charlist = struct.unpack("s" * ((len(text))), text)
+	i = 0
+	bits = ""
+	while (i < len(charlist)):
+		ba = bitarray()
+		ba.frombytes(charlist[i]+charlist[i+1]+charlist[i+2])
+		
+		i = i + 3
+
+
 
 
 def main():
@@ -223,9 +226,8 @@ def main():
 	#print("Please enter the path to the file you wish to Encrpyt")
 	#fileName = raw_input()
 
-	plainText=open("plain.txt",'r') #Takes the path given via user input and assigns the file to object "PlainText", in read mode.
+	plainText=open("plain.txt",'rb') #Takes the path given via user input and assigns the file to object "PlainText", in read mode.
         text = plainText.read()
-        #print(text)
 
 	#TODO: Remove as they are done
 	#Implement Serialisation
@@ -234,6 +236,6 @@ def main():
 	#Bit-Shift (Swift)
 
 	encrypt(text, "plain.txt")
-	# decrypt()
+	decrypt()
 
 if __name__ == "__main__": main() #Defines the Main module as "Main" and not a library
